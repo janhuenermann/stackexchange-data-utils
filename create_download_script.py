@@ -5,7 +5,7 @@ from datetime import datetime
 print("**** Note ****")
 print("If you want to download the whole stackexchange dataset,")
 print("you are probably better of downloading using torrent:")
-print("https://archive.org/download/stackexchange/stackexchange_archive.torrent")
+print("aria2c -j16 -x16 -s16 https://archive.org/download/stackexchange/stackexchange_archive.torrent")
 print("**** ****")
 print("")
 
