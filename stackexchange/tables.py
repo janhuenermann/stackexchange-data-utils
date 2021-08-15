@@ -41,7 +41,7 @@ class Table:
 
             record_count = sum(1 for _ in open(path, "r")) - 3
             it = ET.iterparse(path, events=("start",), huge_tree=True)
-            root = next(it)
+            _, root = next(it)
 
             with tqdm(total=record_count, desc=description, leave=False) as pbar:
                 for _, elem in it:
