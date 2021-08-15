@@ -40,19 +40,11 @@ class Table:
             nonlocal done
 
             record_count = sum(1 for _ in open(path, "r")) - 3
-            fd = open(path, "r")
-            it = iter(fd)
-
-            # Skip first two lines
-            for _ in range(2):
-                next(it)
+            it = ET.iterparse(path, events=("start",), huge_tree=True)
+            root = next(it)
 
             with tqdm(total=record_count, desc=description, leave=False) as pbar:
-                for line in it:
-                    if line.startswith("</"):
-                        break
-
-                    elem = ET.fromstring(line)
+                for _, elem in it:
                     row = self.parse_row(elem)
 
                     if filter_row is not None:
@@ -63,6 +55,7 @@ class Table:
                     last_row = row
                     yield list(row.values())
 
+                    root.clear()
                     pbar.update(1)
 
             fd.close()
