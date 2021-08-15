@@ -26,9 +26,9 @@ with tqdm(files) as pbar:
       if os.path.isdir(file_dir):
          continue
       os.makedirs(file_dir, exist_ok=False)
-      process = subprocess.run(["7z", "x", f"-o {file_dir}", archive_path], capture_output=True)
+      process = subprocess.run(["7z", "x", f"-o{file_dir}", archive_path], capture_output=True)
       assert process.returncode == 0, process.stderr
-      os.remove(archive_path)
+      # os.remove(archive_path)
 
 print("Merging part files...")
 
