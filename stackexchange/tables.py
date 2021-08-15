@@ -40,8 +40,18 @@ class Table:
             nonlocal done
 
             record_count = sum(1 for _ in open(path, "r")) - 3
-            it = ET.iterparse(path, events=("end",), tag="row", huge_tree=True, resolve_entities=True)
-            for _, elem in tqdm(it, total=record_count, desc=description, leave=False):
+            fd = open(path, "r")
+            it = iter(fd)
+
+            # Skip first two lines
+            for _ in range(2):
+                next(it)
+
+            for line in tqdm(it, total=record_count, desc=description, leave=False):
+                if line.startswith("</"):
+                    break
+
+                elem = ET.fromstring(line)
                 row = self.parse_row(elem)
 
                 if filter_row is not None:
@@ -59,6 +69,7 @@ class Table:
                     while ancestor.getprevious() is not None:
                         del ancestor.getparent()[0]
 
+            fd.close()
             done = True
 
         insert_sql = f"""INSERT INTO {self.name} ({",".join(self.schema.keys())}) VALUES ({",".join(["?" for _ in range(len(self.schema))])});"""
