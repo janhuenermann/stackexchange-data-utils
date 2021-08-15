@@ -1,7 +1,7 @@
-stackoverflow-dump
+stackexchange-dump
 ==================
 
-This repo contains utilities to deal with gathering, cleaning and loading of stackoverflow data
+This repo contains utilities to deal with gathering, cleaning and loading of stackexchange data
 
 About the data
 
