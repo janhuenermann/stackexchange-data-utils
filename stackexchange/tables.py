@@ -61,13 +61,6 @@ class Table:
 
                 last_row = row
                 yield list(row.values())
-                # It's safe to call clear() here because no descendants will be
-                # accessed
-                elem.clear()
-                # Also eliminate now-empty references from the root node to elem
-                for ancestor in elem.xpath('ancestor-or-self::*'):
-                    while ancestor.getprevious() is not None:
-                        del ancestor.getparent()[0]
 
             fd.close()
             done = True
