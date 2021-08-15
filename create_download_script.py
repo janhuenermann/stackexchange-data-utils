@@ -15,7 +15,10 @@ print(f"Collected {len(urls)} files without meta sites")
 
 now = datetime.now()
 
-script = "\n".join([f"wget -O {url} {base_url}/{url}" for url in urls])
+for url in urls:
+   assert url.endswith(".7z")
+
+script = "\n".join([f"wget -O {url} {base_url}/{url}\n7z x {url}" for url in urls])
 script = f"""#!/bin/bash
 
 # Generated on {now.strftime("%d/%m/%Y %H:%M:%S")}
