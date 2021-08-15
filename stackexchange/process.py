@@ -10,7 +10,7 @@ from stackexchange.tables import sites, users, posts
 
 
 def import_into_database(root_dir, out_path, ignore_meta=False):
-    assert not os.path.exists(out_path)
+    # assert not os.path.exists(out_path)
 
     try:
         db = sqlite3.connect(out_path)
@@ -26,17 +26,25 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
     for table in (sites, users, posts):
         table.create_if_not_exists(db)
 
-    print("Inserting sites...")
 
-    def filter_sites(row):
-        if ignore_meta:
-            meta_in_url = "/meta." in row["url"] or ".meta." in row["url"]
-            meta_in_name = "meta" in row["name"].lower()
-            if meta_in_name or meta_in_url:
-                return None
-        return row
 
-    sites.insert_from_xml(db, os.path.join(root_dir, "Sites.xml"), filter_sites)
+    existing_site_count = db.execute("SELECT COUNT(*) from sites").fetchone()[0]
+
+    if existing_site_count == 0:
+        print("Inserting sites...")
+
+        def filter_sites(row):
+            if ignore_meta:
+                meta_in_url = "/meta." in row["url"] or ".meta." in row["url"]
+                meta_in_name = "meta" in row["name"].lower()
+                if meta_in_name or meta_in_url:
+                    return None
+            return row
+
+        sites.insert_from_xml(db, os.path.join(root_dir, "Sites.xml"), filter_sites)
+
+    else:
+        print("Found existing sites")
 
     site_cur = db.cursor()
     site_cur.execute("SELECT id, url FROM sites")
