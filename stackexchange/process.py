@@ -30,21 +30,17 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
 
     existing_site_count = db.execute("SELECT COUNT(*) from sites").fetchone()[0]
 
-    if existing_site_count == 0:
-        print("Inserting sites...")
+    print("Inserting sites...")
 
-        def filter_sites(row):
-            if ignore_meta:
-                meta_in_url = "/meta." in row["url"] or ".meta." in row["url"]
-                meta_in_name = "meta" in row["name"].lower()
-                if meta_in_name or meta_in_url:
-                    return None
-            return row
+    def filter_sites(row):
+        if ignore_meta:
+            meta_in_url = "/meta." in row["url"] or ".meta." in row["url"]
+            meta_in_name = "meta" in row["name"].lower()
+            if meta_in_name or meta_in_url:
+                return None
+        return row
 
-        sites.insert_from_xml(db, os.path.join(root_dir, "Sites.xml"), filter_sites)
-
-    else:
-        print("Found existing sites")
+    sites.insert_from_xml(db, os.path.join(root_dir, "Sites.xml"), filter_sites, exist_ok=True)
 
     site_cur = db.cursor()
     site_cur.execute("SELECT id, url FROM sites")
