@@ -1,7 +1,7 @@
 stackexchange-dump
 ==================
 
-This repo contains utilities to deal with gathering, cleaning and loading of stackexchange data
+Scripts to deal with gathering, cleaning and loading of stackexchange data
 
 About the data
 
