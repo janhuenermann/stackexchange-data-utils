@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from tqdm import tqdm
-import xml.etree.ElementTree as ET
+import lxml.etree as ET
 from sqlite3 import Error, IntegrityError
 
 # Ability to create schema
@@ -40,11 +40,8 @@ class Table:
             nonlocal done
 
             record_count = sum(1 for _ in open(path, "r")) - 3
-            it = ET.iterparse(path, events=("end",))
+            it = ET.iterparse(path, events=("end",), tag="row", huge_tree=True, resolve_entities=True)
             for _, elem in tqdm(it, total=record_count, desc=description, leave=False):
-                if elem.tag != "row":
-                    continue
-
                 row = self.parse_row(elem)
 
                 if filter_row is not None:
@@ -54,7 +51,13 @@ class Table:
 
                 last_row = row
                 yield list(row.values())
+                # It's safe to call clear() here because no descendants will be
+                # accessed
                 elem.clear()
+                # Also eliminate now-empty references from the root node to elem
+                for ancestor in elem.xpath('ancestor-or-self::*'):
+                    while ancestor.getprevious() is not None:
+                        del ancestor.getparent()[0]
 
             done = True
 
