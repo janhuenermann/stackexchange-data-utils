@@ -40,7 +40,7 @@ class Table:
             nonlocal done
 
             record_count = sum(1 for _ in open(path, "r")) - 3
-            it = ET.iterparse(path, events=("end",), tag="row")
+            it = ET.iterparse(path, events=("end",), tag="row", huge_tree=True, resolve_entities=True)
             for _, elem in tqdm(it, total=record_count, desc=description, leave=False):
                 row = self.parse_row(elem)
 
