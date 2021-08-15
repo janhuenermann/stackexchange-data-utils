@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 # Ability to create schema
 # and insert rows
 class Table:
