@@ -10,7 +10,8 @@ import html
 from stackexchange.tables import sites, users, posts
 
 
-def preprocess_post(row):
+def preprocess_post(row, site_id):
+    row["site_id"] = site_id
     if row["body"] is not None:
         row["body"] = html.unescape(row["body"])
         row["body"] = row["body"].strip()
@@ -76,13 +77,14 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
                 sites_existing.append(site_url)
                 continue
 
-            def skip_question(line):
-                return 'PostTypeId="1"' not in line
-            def skip_answer(line):
-                return 'PostTypeId="2"' not in line
-            def filter_post(row):
-                row["site_id"] = site_id
-                return preprocess_post(row)
+            def filter_question(row):
+                if row["post_type"] != 1:
+                    return None
+                return preprocess_post(row, site_id)
+            def filter_answer(row):
+                if row["post_type"] != 2:
+                    return None
+                return preprocess_post(row, site_id)
             def filter_user(row):
                 row["site_id"] = site_id
                 return row
@@ -90,9 +92,9 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
             # Users
             users.insert_from_xml(db, os.path.join(site_dir, "Users.xml"), filter_row=filter_user, description="Users")
             # First insert answers
-            posts.insert_from_xml(db, os.path.join(site_dir, "Posts.xml"), should_skip=skip_answer, filter_row=filter_post, description="Answers")
+            posts.insert_from_xml(db, os.path.join(site_dir, "Posts.xml"), filter_row=filter_answer, description="Answers")
             # Then insert questions
-            posts.insert_from_xml(db, os.path.join(site_dir, "Posts.xml"), should_skip=skip_question, filter_row=filter_post, description="Questions")
+            posts.insert_from_xml(db, os.path.join(site_dir, "Posts.xml"), filter_row=filter_question, description="Questions")
 
             sites_inserted.append(site_url)
 

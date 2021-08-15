@@ -31,7 +31,7 @@ class Table:
                 vals[col] = None
         return vals
     
-    def insert_from_xml(self, db, path, filter_row=None, should_skip=None, description=None):
+    def insert_from_xml(self, db, path, filter_row=None, description=None):
         fd = open(path, "r")
         it = iter(fd)
         # Skip first two lines (xml opening tags)
@@ -50,9 +50,6 @@ class Table:
 
                 if line == endtag:
                     break
-
-                if should_skip is not None and should_skip(line):
-                    continue
 
                 root = ET.fromstring(line)
                 row = self.parse_row(root)
