@@ -47,20 +47,23 @@ class Table:
             for _ in range(2):
                 next(it)
 
-            for line in tqdm(it, total=record_count, desc=description, leave=False):
-                if line.startswith("</"):
-                    break
+            with tqdm(total=record_count, desc=description, leave=False) as pbar:
+                for line in it:
+                    if line.startswith("</"):
+                        break
 
-                elem = ET.fromstring(line)
-                row = self.parse_row(elem)
+                    elem = ET.fromstring(line)
+                    row = self.parse_row(elem)
 
-                if filter_row is not None:
-                    row = filter_row(row)
-                if row is None:
-                    continue
+                    if filter_row is not None:
+                        row = filter_row(row)
+                    if row is None:
+                        continue
 
-                last_row = row
-                yield list(row.values())
+                    last_row = row
+                    yield list(row.values())
+
+                    pbar.update(1)
 
             fd.close()
             done = True
