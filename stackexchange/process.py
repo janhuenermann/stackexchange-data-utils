@@ -29,13 +29,11 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
         return
 
     # Turn on foreign key constraints
-    db.execute("PRAGMA foreign_keys = ON;")
+    # db.execute("PRAGMA foreign_keys = ON;")
 
     print("Creating database schema...")
     for table in (sites, users, posts):
         table.create_if_not_exists(db)
-
-
 
     existing_site_count = db.execute("SELECT COUNT(*) from sites").fetchone()[0]
 

@@ -40,7 +40,7 @@ class Table:
             nonlocal done
 
             record_count = sum(1 for _ in open(path, "r")) - 3
-            it = ET.iterparse(path, events=("start",), huge_tree=True)
+            it = ET.iterparse(path, events=("start",), recover=True, huge_tree=True)
             _, root = next(it)
 
             with tqdm(total=record_count, desc=description, leave=False) as pbar:
@@ -119,8 +119,7 @@ posts = Table("posts",
         "PRIMARY KEY (id)",
         "UNIQUE (post_id, site_id) ON CONFLICT REPLACE",
         "FOREIGN KEY (site_id) REFERENCES sites (site_id)",
-        "FOREIGN KEY (user_id, site_id) REFERENCES users (user_id, site_id)",
-        "FOREIGN KEY (accepted_answer_id, site_id) REFERENCES posts (post_id, site_id)"
+        "FOREIGN KEY (user_id, site_id) REFERENCES users (user_id, site_id)"
     ]
 )
 
