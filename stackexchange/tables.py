@@ -31,7 +31,7 @@ class Table:
                 vals[col] = None
         return vals
     
-    def insert_from_xml(self, db, path, filter_row=None, description=None):
+    def insert_from_xml(self, db, path, filter_row=None, should_skip=None, description=None):
         fd = open(path, "r")
         it = iter(fd)
         # Skip first two lines (xml opening tags)
@@ -47,8 +47,12 @@ class Table:
             record_count = sum(1 for _ in open(path, "r")) - 3
             for line in tqdm(it, total=record_count, desc=description, leave=False):
                 line = line.strip()
+
                 if line == endtag:
                     break
+
+                if should_skip is not None and should_skip(line):
+                    continue
 
                 root = ET.fromstring(line)
                 row = self.parse_row(root)
