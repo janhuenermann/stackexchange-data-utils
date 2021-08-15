@@ -9,10 +9,6 @@ import re
 from stackexchange.tables import sites, users, posts
 
 
-def filter_post(row):
-    return row["post_type"] not in (1, 2)
-
-
 def import_into_database(root_dir, out_path, ignore_meta=False):
     assert not os.path.exists(out_path)
 
@@ -23,14 +19,16 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
         print(e)
         return
 
-    print("Creating database schema...")
+    # Turn on foreign key constraints
+    db.execute("PRAGMA foreign_keys = ON;")
 
+    print("Creating database schema...")
     for table in (sites, users, posts):
         table.create_if_not_exists(db)
 
     print("Finding site information...")
 
-    def modify_sites(row):
+    def filter_sites(row):
         if ignore_meta:
             meta_in_url = "/meta." in row["url"] or ".meta." in row["url"]
             meta_in_name = "meta" in row["name"].lower()
@@ -38,7 +36,7 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
                 return None
         return row
 
-    sites.insert_from_xml(db, os.path.join(root_dir, "Sites.xml"), modify_sites)
+    sites.insert_from_xml(db, os.path.join(root_dir, "Sites.xml"), filter_sites)
 
     site_cur = db.cursor()
     site_cur.execute("SELECT id, url FROM sites")
@@ -47,6 +45,10 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
 
     print("Inserting posts and users into database....")
 
+    sites_not_found = []
+    sites_existing = []
+    sites_inserted = []
+
     with tqdm(site_todo) as pbar:
         for site in pbar:
             site_id = int(site[0])
@@ -54,26 +56,59 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
             pbar.set_description(site_url)
 
             site_dir = os.path.join(root_dir, site_url)
-
             if not os.path.isdir(site_dir):
-                print(f"WARNING : could not find directory for site {site_url}.")
+                sites_not_found.append(site_url)
                 continue
 
             existing_count = db.execute("SELECT COUNT(*) from users where site_id=?", (site_id,)).fetchone()[0]
             if existing_count > 0:
-                print(f"WARNING : found existing entries for {site_url}, skipping.")
+                sites_existing.append(site_url)
                 continue
 
-            def modify_post(row):
-                row["site_id"] = site_id
-                if filter_post(row):
+            def filter_question(row):
+                if row["post_type"] != 1:
                     return None
+                row["site_id"] = site_id
                 return row
 
-            def modify_user(row):
+            def filter_answer(row):
+                if row["post_type"] != 2:
+                    return None
                 row["site_id"] = site_id
+                return row
 
-            users.insert_from_xml(db, os.path.join(site_dir, "Users.xml"), modify_row=modify_user)
-            posts.insert_from_xml(db, os.path.join(site_dir, "Posts.xml"), modify_row=modify_post)
+            def filter_user(row):
+                row["site_id"] = site_id
+                return row
+
+            # Users
+            users.insert_from_xml(db, os.path.join(site_dir, "Users.xml"), filter_row=filter_user, description="users")
+            # First insert answers
+            posts.insert_from_xml(db, os.path.join(site_dir, "Posts.xml"), filter_row=filter_answer, description="answers")
+            # Then insert questions
+            posts.insert_from_xml(db, os.path.join(site_dir, "Posts.xml"), filter_row=filter_question, description="questions")
+
+            sites_inserted.append(site_url)
+
+    if len(sites_not_found) > 0:
+        print("Sites not found:")
+        print("================")
+        for site in sites_not_found:
+            print(site)
+        print("================")
+
+    if len(sites_existing) > 0:
+        print("Sites existing:")
+        print("===============")
+        for site in sites_existing:
+            print(site)
+        print("===============")
+
+    if len(sites_inserted) > 0:
+        print("Sites inserted:")
+        print("===============")
+        for site in sites_inserted:
+            print(site)
+        print("===============")
 
     db.close()

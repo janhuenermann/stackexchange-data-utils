@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from tqdm import tqdm
 import xml.etree.ElementTree as ET
-
+from sqlite3 import Error, IntegrityError
 
 # Ability to create schema
 # and insert rows
@@ -31,16 +31,21 @@ class Table:
                 vals[col] = None
         return vals
     
-    def insert_from_xml(self, db, path, modify_row=None):
+    def insert_from_xml(self, db, path, filter_row=None, description=None):
         fd = open(path, "r")
         it = iter(fd)
         # Skip first two lines (xml opening tags)
         for i in range(2):
             next(it)
-    
+        
+        last_row = None
+        done = False
         def pull_rows():
+            nonlocal last_row
+            nonlocal done
             endtag = f"</{self.name}>"
-            for line in tqdm(it):
+            record_count = sum(1 for _ in open(path, "r")) - 3
+            for line in tqdm(it, total=record_count, desc=description, leave=False):
                 line = line.strip()
                 if line == endtag:
                     break
@@ -48,24 +53,33 @@ class Table:
                 root = ET.fromstring(line)
                 row = self.parse_row(root)
 
-                if modify_row is not None:
-                    row = modify_row(row)
+                if filter_row is not None:
+                    row = filter_row(row)
                 if row is None:
                     continue
 
-                try:
-                    yield list(row.values())
-                except:
-                    print(row)
+                last_row = row
+                yield list(row.values())
+            done = True
 
         insert_sql = f"""INSERT INTO {self.name} ({",".join(self.schema.keys())}) VALUES ({",".join(["?" for _ in range(len(self.schema))])});"""
-        #
+        
+        data = pull_rows()
         cur = db.cursor()
-        cur.executemany(insert_sql, pull_rows())
-        db.commit()
+
+        while not done:
+            try:
+                cur.executemany(insert_sql, data)
+            except IntegrityError as e:
+                continue # skip
+            except Error as e:
+                print("Last inserted row:")
+                print(last_row)
+                print("Exception:")
+                raise e
+
+        cur.close()
         fd.close()
-
-
 
 # More info here:
 # https://meta.stackexchange.com/questions/2677/database-schema-documentation-for-the-public-data-dump-and-sede
@@ -85,25 +99,26 @@ sites = Table("sites",
 
 posts = Table("posts",
     schema=OrderedDict([
-        ("id",                  ("Id",                  "INTEGER"               )),
-        ("site_id",             (None,                  "INTEGER"               )),
-        ("post_type",           ("PostTypeId",          "INTEGER NOT NULL"      )),
-        ("accepted_answer_id",  ("AcceptedAnswerId",    "INTEGER"               )),
-        ("creation_date",       ("CreationDate",        "TEXT NOT NULL"         )),
-        ("score",               ("Score",               "INTEGER NOT NULL"      )),
-        ("view_count",          ("ViewCount",           "INTEGER"               )),
-        ("body",                ("Body",                "TEXT"                  )),
-        ("user_id",             ("OwnerUserId",         "INTEGER"               )),
-        ("last_activity_date",  ("LastActivityDate",    "TEXT"                  )),
-        ("title",               ("Title",               "TEXT"                  )),
-        ("tags",                ("Tags",                "TEXT"                  )),
-        ("answer_count",        ("AnswerCount",         "INTEGER"               )),
-        ("comment_count",       ("CommentCount",        "INTEGER"               ))]), 
+        ("id",                  ("Id",                  "INTEGER"                       )),
+        ("site_id",             (None,                  "INTEGER"                       )),
+        ("post_type",           ("PostTypeId",          "INTEGER NOT NULL"              )),
+        ("accepted_answer_id",  ("AcceptedAnswerId",    "INTEGER"                       )),
+        ("creation_date",       ("CreationDate",        "TEXT NOT NULL"                 )),
+        ("score",               ("Score",               "INTEGER NOT NULL"              )),
+        ("view_count",          ("ViewCount",           "INTEGER"                       )),
+        ("body",                ("Body",                "TEXT"                          )),
+        ("user_id",             ("OwnerUserId",         "INTEGER"                       )),
+        ("last_activity_date",  ("LastActivityDate",    "TEXT"                          )),
+        ("title",               ("Title",               "TEXT"                          )),
+        ("tags",                ("Tags",                "TEXT"                          )),
+        ("answer_count",        ("AnswerCount",         "INTEGER"                       )),
+        ("comment_count",       ("CommentCount",        "INTEGER"                       ))]), 
     constraints=[
         "PRIMARY KEY (id, site_id)",
         "FOREIGN KEY (site_id) REFERENCES sites (id)",
-        "FOREIGN KEY (user_id) REFERENCES users (id)",
-        "FOREIGN KEY (accepted_answer_id) REFERENCES posts (id)"]
+        "FOREIGN KEY (user_id, site_id) REFERENCES users (id, site_id)",
+        "FOREIGN KEY (accepted_answer_id, site_id) REFERENCES posts (id, site_id)"
+    ]
 )
 
 users = Table("users",
@@ -122,6 +137,6 @@ users = Table("users",
         ("up_votes",        ("UpVotes",         "INTEGER"           ))]),
     constraints=[
         "PRIMARY KEY (id, site_id)",
-        "FOREIGN KEY (site_id) REFERENCES sites(id)"
+        "FOREIGN KEY (site_id) REFERENCES sites (id)"
     ]
 )
