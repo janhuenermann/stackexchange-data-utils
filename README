@@ -5,9 +5,10 @@ This repo contains utilities to deal with gathering, cleaning and loading of sta
 
 About the data
 
-=> License: CC-BY-SA 3.0
+=> License: CC-BY-SA 4.0
 
 => Useful links
 
-- Download links available from here: https://archive.org/download/stackexchange
-- Data documentation can be found: https://meta.stackexchange.com/questions/2677/database-schema-documentation-for-the-public-data-dump-and-sede
+- Overview: https://archive.org/details/stackexchange
+- Download links: https://archive.org/download/stackexchange
+- Data documentation: https://meta.stackexchange.com/questions/2677/database-schema-documentation-for-the-public-data-dump-and-sede
