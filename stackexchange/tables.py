@@ -78,6 +78,7 @@ class Table:
                 print("Exception:")
                 raise e
 
+        db.commit()
         cur.close()
         fd.close()
 

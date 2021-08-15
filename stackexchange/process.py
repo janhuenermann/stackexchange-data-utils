@@ -26,7 +26,7 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
     for table in (sites, users, posts):
         table.create_if_not_exists(db)
 
-    print("Finding site information...")
+    print("Inserting sites...")
 
     def filter_sites(row):
         if ignore_meta:
@@ -81,11 +81,11 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
                 return row
 
             # Users
-            users.insert_from_xml(db, os.path.join(site_dir, "Users.xml"), filter_row=filter_user, description="users")
+            users.insert_from_xml(db, os.path.join(site_dir, "Users.xml"), filter_row=filter_user, description="Users")
             # First insert answers
-            posts.insert_from_xml(db, os.path.join(site_dir, "Posts.xml"), filter_row=filter_answer, description="answers")
+            posts.insert_from_xml(db, os.path.join(site_dir, "Posts.xml"), filter_row=filter_answer, description="Answers")
             # Then insert questions
-            posts.insert_from_xml(db, os.path.join(site_dir, "Posts.xml"), filter_row=filter_question, description="questions")
+            posts.insert_from_xml(db, os.path.join(site_dir, "Posts.xml"), filter_row=filter_question, description="Questions")
 
             sites_inserted.append(site_url)
 
