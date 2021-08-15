@@ -18,12 +18,22 @@ now = datetime.now()
 for url in urls:
    assert url.endswith(".7z")
 
-script = "\n".join([f"wget -O {url} {base_url}/{url}\n7z x {url}" for url in urls])
+files = [f"'{url[:-3]}'" for url in urls]
 script = f"""#!/bin/bash
 
 # Generated on {now.strftime("%d/%m/%Y %H:%M:%S")}
 
-{script}
+FILES=({" ".join(files)})
+BASE_URL="{base_url}"
+
+for FILE in "${{FILES[@]}}"
+do
+
+wget -O $FILE.7z $BASE_URL/$FILE.7z
+(mkdir $FILE && cd $FILE && 7z x ../$FILE.7z)
+rm $FILE.7z
+
+done
 """
 
 f = open("download.sh", "w")
