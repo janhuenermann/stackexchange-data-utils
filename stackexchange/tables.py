@@ -87,21 +87,25 @@ class Table:
 
 sites = Table("sites",
     schema=OrderedDict([
-        ("id",              ("Id",              "INTEGER PRIMARY KEY"   )),
-        ("url",             ("Url",             "TEXT"                  )),
-        ("tiny_name",       ("TinyName",        "TEXT"                  )),
-        ("long_name",       ("LongName",        "TEXT"                  )),
-        ("name",            ("Name",            "TEXT"                  )),
-        ("parent_id",       ("ParentId",        "INTEGER"               )),
-        ("tagline",         ("Tagline",         "TEXT"                  )),
-        ("badge_icon_url",  ("BadgeIconUrl",    "TEXT"                  ))]),
-    constraints=[]
+        ("id",              (None,              "INTEGER"                   )),
+        ("site_id",         ("Id",              "INTEGER UNIQUE NOT NULL"   )),
+        ("url",             ("Url",             "TEXT"                      )),
+        ("tiny_name",       ("TinyName",        "TEXT"                      )),
+        ("long_name",       ("LongName",        "TEXT"                      )),
+        ("name",            ("Name",            "TEXT"                      )),
+        ("parent_id",       ("ParentId",        "INTEGER"                   )),
+        ("tagline",         ("Tagline",         "TEXT"                      )),
+        ("badge_icon_url",  ("BadgeIconUrl",    "TEXT"                      ))]),
+    constraints=[
+        "PRIMARY KEY (id)"
+    ]
 )
 
 posts = Table("posts",
     schema=OrderedDict([
-        ("id",                  ("Id",                  "INTEGER"                       )),
-        ("site_id",             (None,                  "INTEGER"                       )),
+        ("id",                  (None,                  "INTEGER"                       )),
+        ("post_id",             ("Id",                  "INTEGER NOT NULL"              )),
+        ("site_id",             (None,                  "INTEGER NOT NULL"              )),
         ("post_type",           ("PostTypeId",          "INTEGER NOT NULL"              )),
         ("accepted_answer_id",  ("AcceptedAnswerId",    "INTEGER"                       )),
         ("creation_date",       ("CreationDate",        "TEXT NOT NULL"                 )),
@@ -115,17 +119,19 @@ posts = Table("posts",
         ("answer_count",        ("AnswerCount",         "INTEGER"                       )),
         ("comment_count",       ("CommentCount",        "INTEGER"                       ))]), 
     constraints=[
-        "PRIMARY KEY (id, site_id)",
-        "FOREIGN KEY (site_id) REFERENCES sites (id)",
-        "FOREIGN KEY (user_id, site_id) REFERENCES users (id, site_id)",
-        "FOREIGN KEY (accepted_answer_id, site_id) REFERENCES posts (id, site_id)"
+        "PRIMARY KEY (id)",
+        "UNIQUE (post_id, site_id) ON CONFLICT REPLACE",
+        "FOREIGN KEY (site_id) REFERENCES sites (site_id)",
+        "FOREIGN KEY (user_id, site_id) REFERENCES users (user_id, site_id)",
+        "FOREIGN KEY (accepted_answer_id, site_id) REFERENCES posts (post_id, site_id)"
     ]
 )
 
 users = Table("users",
     schema=OrderedDict([
-        ("id",              ("Id",              "INTEGER"           )),
-        ("site_id",         (None,              "INTEGER"           )),
+        ("id",              (None,              "INTEGER"           )),
+        ("user_id",         ("Id",              "INTEGER NOT NULL"  )),
+        ("site_id",         (None,              "INTEGER NOT NULL"  )),
         ("reputation",      ("Reputation",      "INTEGER NOT NULL"  )),
         ("creation_date",   ("CreationDate",    "TEXT"              )),
         ("display_name",    ("DisplayName",     "TEXT"              )),
@@ -137,7 +143,8 @@ users = Table("users",
         ("account_id",      ("AccountId",       "INTEGER"           )),
         ("up_votes",        ("UpVotes",         "INTEGER"           ))]),
     constraints=[
-        "PRIMARY KEY (id, site_id)",
-        "FOREIGN KEY (site_id) REFERENCES sites (id)"
+        "PRIMARY KEY (id)",
+        "UNIQUE (user_id, site_id) ON CONFLICT REPLACE",
+        "FOREIGN KEY (site_id) REFERENCES sites (site_id)"
     ]
 )
