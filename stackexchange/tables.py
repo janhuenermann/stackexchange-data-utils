@@ -31,7 +31,7 @@ class Table:
                 vals[col] = None
         return vals
     
-    def insert_from_xml(self, db, path, exist_ok=False, filter_row=None, description=None):
+    def insert_from_xml(self, db, path, filter_row=None, description=None):
         fd = open(path, "r")
         it = iter(fd)
         # Skip first two lines (xml opening tags)
@@ -62,7 +62,7 @@ class Table:
                 yield list(row.values())
             done = True
 
-        insert_sql = f"""INSERT{" OR IGNORE" if exist_ok else ""} INTO {self.name} ({",".join(self.schema.keys())}) VALUES ({",".join(["?" for _ in range(len(self.schema))])});"""
+        insert_sql = f"""INSERT INTO {self.name} ({",".join(self.schema.keys())}) VALUES ({",".join(["?" for _ in range(len(self.schema))])});"""
         
         data = pull_rows()
         cur = db.cursor()

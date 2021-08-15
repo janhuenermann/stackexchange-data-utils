@@ -40,7 +40,7 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
                 return None
         return row
 
-    sites.insert_from_xml(db, os.path.join(root_dir, "Sites.xml"), filter_sites, exist_ok=True)
+    sites.insert_from_xml(db, os.path.join(root_dir, "Sites.xml"), filter_row=filter_sites)
 
     site_cur = db.cursor()
     site_cur.execute("SELECT id, url FROM sites")
