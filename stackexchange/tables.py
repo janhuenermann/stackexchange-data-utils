@@ -32,14 +32,13 @@ class Table:
         return vals
     
     def insert_from_xml(self, db, path, filter_row=None, description=None):
-        fd = open(path, "r")
         last_row = None
         done = False
         def pull_rows():
             nonlocal last_row
             nonlocal done
             record_count = sum(1 for _ in open(path, "r")) - 3
-            it = ET.iterparse(fd, events=("end",), tag="row")
+            it = ET.iterparse(path, events=("end",), tag="row")
             for _, elem in tqdm(it, total=record_count, desc=description, leave=False):
                 row = self.parse_row(elem)
 
@@ -70,7 +69,6 @@ class Table:
 
         db.commit()
         cur.close()
-        fd.close()
 
 # More info here:
 # https://meta.stackexchange.com/questions/2677/database-schema-documentation-for-the-public-data-dump-and-sede
