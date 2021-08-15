@@ -15,6 +15,7 @@ parser.set_defaults(ignore_meta=False)
 
 args = parser.parse_args()
 
+partfile_pattern = "(.+\.com)-(\w+)$"
 files = [name[:-3] for name in os.listdir(args.root_dir) if name.endswith(".7z")]
 
 print(f"Extracting {len(files)} archives...")
@@ -23,6 +24,12 @@ with tqdm(files) as pbar:
       pbar.set_description(file)
       archive_path = os.path.join(args.root_dir, f"{file}.7z")
       file_dir = os.path.join(args.root_dir, file)
+      partfile = re.match(partfile_pattern, file)
+      if partfile is not None:
+          # Skipping since all partfiles have been extracted
+          if os.path.isdir(os.path.join(args.root_dir, partfile.group(1))):
+              continue
+      # Skipping since file has already been extracted
       if os.path.isdir(file_dir):
          continue
       os.makedirs(file_dir, exist_ok=False)
@@ -32,8 +39,8 @@ with tqdm(files) as pbar:
 
 print("Merging part files...")
 
-partfiles = [re.match("(.+\.com)-(\w+)$", file) for file in files]
-partfiles = [file for file in part_files if file is not None]
+partfiles = [re.match(partfile_pattern, file) for file in files]
+partfiles = [file for file in partfiles if file is not None]
 sites_of_partfiles = set([file.group(1) for file in partfiles])
 
 for partfile in partfiles:

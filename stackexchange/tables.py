@@ -1,4 +1,7 @@
 from collections import OrderedDict
+from tqdm import tqdm
+import xml.etree.ElementTree as ET
+
 
 # Ability to create schema
 # and insert rows
@@ -43,7 +46,7 @@ class Table:
                     break
 
                 root = ET.fromstring(line)
-                row = parse_row(self.schema, root)
+                row = self.parse_row(root)
 
                 if modify_row is not None:
                     row = modify_row(row)
@@ -75,8 +78,8 @@ sites = Table("sites",
         ("long_name",       ("LongName",        "TEXT"                  )),
         ("name",            ("Name",            "TEXT"                  )),
         ("parent_id",       ("ParentId",        "INTEGER"               )),
-        ("tagline",         ("Tagline",         "INTEGER"               )),
-        ("badge_icon_url",  ("BadgeIconUrl",    "INTEGER"               ))]),
+        ("tagline",         ("Tagline",         "TEXT"                  )),
+        ("badge_icon_url",  ("BadgeIconUrl",    "TEXT"                  ))]),
     constraints=[]
 )
 

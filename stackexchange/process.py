@@ -30,18 +30,20 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
 
     print("Finding site information...")
 
-    with open(os.path.join(root_dir, "Sites.xml"), "r") as fd:
-        def filter_sites(row):
-            if ignore_meta:
-                meta_in_url = "/meta." in row["url"] or ".meta." in row["url"]
-                meta_in_name = "meta" in row["name"].lower()
-                return meta_in_name or meta_in_url
-            return False
-        sites.insert_from_xml(db, fd, filter_sites)
+    def modify_sites(row):
+        if ignore_meta:
+            meta_in_url = "/meta." in row["url"] or ".meta." in row["url"]
+            meta_in_name = "meta" in row["name"].lower()
+            if meta_in_name or meta_in_url:
+                return None
+        return row
+
+    sites.insert_from_xml(db, os.path.join(root_dir, "Sites.xml"), modify_sites)
 
     site_cur = db.cursor()
-    site_cur.execute("SELECT (id, url) FROM sites")
+    site_cur.execute("SELECT id, url FROM sites")
     site_todo = site_cur.fetchall()
+    print(site_todo)
 
     print("Inserting posts and users into database....")
 
@@ -57,7 +59,7 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
                 print(f"WARNING : could not find directory for site {site_url}.")
                 continue
 
-            existing_count = db.execute("SELECT COUNT(*) from users where site_id=?", (site_id,))[0]
+            existing_count = db.execute("SELECT COUNT(*) from users where site_id=?", (site_id,)).fetchone()[0]
             if existing_count > 0:
                 print(f"WARNING : found existing entries for {site_url}, skipping.")
                 continue
