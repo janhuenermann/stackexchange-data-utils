@@ -5,8 +5,16 @@ from tqdm import tqdm
 import os
 from collections import OrderedDict
 import re
+import html
 
 from stackexchange.tables import sites, users, posts
+
+
+def preprocess_post(row):
+    if row["body"] is not None:
+        row["body"] = html.unescape(row["body"])
+        row["body"] = row["body"].strip()
+    return row
 
 
 def import_into_database(root_dir, out_path, ignore_meta=False):
@@ -72,13 +80,13 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
                 if row["post_type"] != 1:
                     return None
                 row["site_id"] = site_id
-                return row
+                return preprocess_post(row)
 
             def filter_answer(row):
                 if row["post_type"] != 2:
                     return None
                 row["site_id"] = site_id
-                return row
+                return preprocess_post(row)
 
             def filter_user(row):
                 row["site_id"] = site_id
