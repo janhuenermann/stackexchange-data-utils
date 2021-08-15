@@ -58,7 +58,6 @@ class Table:
                     root.clear()
                     pbar.update(1)
 
-            fd.close()
             done = True
 
         insert_sql = f"""INSERT INTO {self.name} ({",".join(self.schema.keys())}) VALUES ({",".join(["?" for _ in range(len(self.schema))])});"""
