@@ -33,26 +33,18 @@ class Table:
     
     def insert_from_xml(self, db, path, filter_row=None, description=None):
         fd = open(path, "r")
-        it = iter(fd)
-        # Skip first two lines (xml opening tags)
-        for i in range(2):
-            next(it)
-        
         last_row = None
         done = False
         def pull_rows():
             nonlocal last_row
             nonlocal done
-            endtag = f"</{self.name}>"
             record_count = sum(1 for _ in open(path, "r")) - 3
-            for line in tqdm(it, total=record_count, desc=description, leave=False):
-                line = line.strip()
+            it = ET.iterparse(fd, events=("end",))
+            for _, elem in tqdm(it, total=record_count, desc=description, leave=False):
+                if elem.tag != "row":
+                    continue
 
-                if line == endtag:
-                    break
-
-                root = ET.fromstring(line)
-                row = self.parse_row(root)
+                row = self.parse_row(elem)
 
                 if filter_row is not None:
                     row = filter_row(row)
