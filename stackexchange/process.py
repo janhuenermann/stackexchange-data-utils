@@ -41,7 +41,6 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
     site_cur = db.cursor()
     site_cur.execute("SELECT id, url FROM sites")
     site_todo = site_cur.fetchall()
-    print(site_todo)
 
     print("Inserting posts and users into database....")
 
