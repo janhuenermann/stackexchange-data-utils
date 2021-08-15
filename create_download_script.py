@@ -2,6 +2,13 @@ import requests
 import re
 from datetime import datetime
 
+print("**** Note ****")
+print("If you want to download the whole stackexchange dataset,")
+print("you are probably better of downloading using torrent:")
+print("https://archive.org/download/stackexchange/stackexchange_archive.torrent")
+print("**** ****")
+print("")
+
 base_url = """https://archive.org/download/stackexchange"""
 response = requests.get(base_url)
 body = response.text
