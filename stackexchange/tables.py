@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from tqdm import tqdm
-import xml.etree.ElementTree as ET
+import lxml.etree as ET
 from sqlite3 import Error, IntegrityError
 
 # Ability to create schema
@@ -39,11 +39,8 @@ class Table:
             nonlocal last_row
             nonlocal done
             record_count = sum(1 for _ in open(path, "r")) - 3
-            it = ET.iterparse(fd, events=("end",))
+            it = ET.iterparse(fd, events=("end",), tag="row")
             for _, elem in tqdm(it, total=record_count, desc=description, leave=False):
-                if elem.tag != "row":
-                    continue
-
                 row = self.parse_row(elem)
 
                 if filter_row is not None:
