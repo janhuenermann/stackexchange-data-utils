@@ -51,7 +51,7 @@ class Table:
 
                 last_row = row
                 yield list(row.values())
-                elem.clear()
+                elem.getparent().remove(elem)
 
             done = True
 
