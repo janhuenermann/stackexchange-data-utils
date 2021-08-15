@@ -75,12 +75,8 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
                 sites_existing.append(site_url)
                 continue
 
-            def filter_question(row):
-                if row["post_type"] != 1:
-                    return None
-                return preprocess_post(row, site_id)
-            def filter_answer(row):
-                if row["post_type"] != 2:
+            def filter_post(row):
+                if row["post_type"] not in (1, 2):
                     return None
                 return preprocess_post(row, site_id)
             def filter_user(row):
@@ -90,9 +86,7 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
             # Users
             users.insert_from_xml(db, os.path.join(site_dir, "Users.xml"), filter_row=filter_user, description="Users")
             # First insert answers
-            posts.insert_from_xml(db, os.path.join(site_dir, "Posts.xml"), filter_row=filter_answer, description="Answers")
-            # Then insert questions
-            posts.insert_from_xml(db, os.path.join(site_dir, "Posts.xml"), filter_row=filter_question, description="Questions")
+            posts.insert_from_xml(db, os.path.join(site_dir, "Posts.xml"), filter_row=filter_post, description="Posts")
 
             sites_inserted.append(site_url)
 
