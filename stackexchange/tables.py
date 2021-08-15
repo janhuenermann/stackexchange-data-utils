@@ -34,9 +34,11 @@ class Table:
     def insert_from_xml(self, db, path, filter_row=None, description=None):
         last_row = None
         done = False
+
         def pull_rows():
             nonlocal last_row
             nonlocal done
+
             record_count = sum(1 for _ in open(path, "r")) - 3
             it = ET.iterparse(path, events=("end",), tag="row")
             for _, elem in tqdm(it, total=record_count, desc=description, leave=False):
@@ -49,6 +51,8 @@ class Table:
 
                 last_row = row
                 yield list(row.values())
+                elem.clear()
+
             done = True
 
         insert_sql = f"""INSERT INTO {self.name} ({",".join(self.schema.keys())}) VALUES ({",".join(["?" for _ in range(len(self.schema))])});"""
