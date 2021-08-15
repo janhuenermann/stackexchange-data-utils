@@ -21,7 +21,7 @@ class Table:
     def parse_row(self, xml_root):
         vals = OrderedDict()
         for col, (attr, typ) in self.schema.items():
-            if attr in xml_root.attrib:
+            if attr is not None and attr in xml_root.attrib:
                 v = xml_root.attrib[attr]
                 # Convert to int
                 if typ.startswith("INTEGER"):
