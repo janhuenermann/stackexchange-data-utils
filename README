@@ -3,6 +3,11 @@ stackexchange-dump
 
 Scripts to deal with gathering, cleaning and loading of stackexchange data
 
+Collecting the data
+
+1) `download.sh`
+2) `python extract.py stackexchange/ db.sqlite --ignore-meta`
+
 About the data
 
 => License: CC-BY-SA 4.0
