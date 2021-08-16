@@ -19,8 +19,6 @@ def preprocess_post(row, site_id):
 
 
 def import_into_database(root_dir, out_path, ignore_meta=False):
-    # assert not os.path.exists(out_path)
-
     try:
         db = sqlite3.connect(out_path)
     except Error as e:
