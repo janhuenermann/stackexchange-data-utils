@@ -13,5 +13,7 @@ Stack Exchange dataset
 - Overview of dataset https://archive.org/details/stackexchange
 - Download links https://archive.org/download/stackexchange
 - Documentation of dataset https://meta.stackexchange.com/questions/2677/database-schema-documentation-for-the-public-data-dump-and-sede
+- Size of question/answer/user database 100G
+- Size of question-answer pairs as plaintext 88G (includes non-English communities)
 - License of dataset CC-BY-SA 4.0
 
