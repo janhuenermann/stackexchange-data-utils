@@ -21,7 +21,7 @@ sql_select_orphaned_questions = \
 
 sql_update_answer_count = \
     """UPDATE posts AS question
-       SET question.answer_count = (
+       SET answer_count = (
            SELECT COUNT(answer.id) FROM posts answer
            WHERE answer.site_id = question.site_id
            AND answer.parent_id = question.post_id
