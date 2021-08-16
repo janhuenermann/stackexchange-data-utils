@@ -45,9 +45,9 @@ def delete_orphaned_questions(db):
     print(len(post_ids))
 
 
-def tidy_database(path):
+def tidy_database(db_path):
     try:
-        db = sqlite3.connect(out_path)
+        db = sqlite3.connect(db_path)
     except Error as e:
         print("An error occured while connecting to database:")
         print(e)
