@@ -78,8 +78,9 @@ def clean_orphaned_questions(db):
         print("Skipping")
         return
 
-    cur = db.execute(f"UPDATE posts SET accepted_answer_id = NULL WHERE id IN ({select_orphaned_questions});")
+    cur = db.execute(f"UPDATE posts SET accepted_answer_id = NULL WHERE id IN ({sql_select_orphaned_questions[:-1]});")
     print(f"Updated {cur.rowcount} posts")
+    db.commit()
 
 
 def delete_orphaned_answers(db):
@@ -91,8 +92,9 @@ def delete_orphaned_answers(db):
         print("Skipping")
         return
 
-    cur = db.execute(f"DELETE FROM posts WHERE id IN ({select_orphaned_answers});")
+    cur = db.execute(f"DELETE FROM posts WHERE id IN ({sql_select_orphaned_answers[:-1]});")
     print(f"Deleted {cur.rowcount} posts")
+    db.commit()
 
 
 def delete_unanswered_questions(db):
@@ -106,6 +108,7 @@ def delete_unanswered_questions(db):
 
     cur = db.execute(sql_delete_unanswered_questions)
     print(f"Deleted {cur.rowcount} posts")
+    db.commit()
 
 
 def delete_bad_answers(db):
@@ -119,12 +122,14 @@ def delete_bad_answers(db):
 
     cur = db.execute(sql_delete_bad_answers)
     print(f"Deleted {cur.rowcount} posts")
+    db.commit()
 
 
 def update_answer_count(db):
     print("Updating answer count column")
     cur = db.execute(sql_update_answer_count)
     print(f"Updated {cur.rowcount} posts")
+    db.commit()
 
 
 def tidy_database(db_path, args):
