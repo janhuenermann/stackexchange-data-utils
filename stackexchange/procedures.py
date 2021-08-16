@@ -1,51 +1,126 @@
 import sqlite3
 from sqlite3 import Error
+import click
 
 
-create_post_id_index = \
+sql_create_post_id_index = \
     """CREATE UNIQUE INDEX IF NOT EXISTS index_post_id ON posts (post_id, site_id);"""
 
-create_user_id_index = \
+sql_create_user_id_index = \
     """CREATE UNIQUE INDEX IF NOT EXISTS index_user_id ON users (user_id, site_id);"""
 
-select_orphaned_questions = \
+sql_select_orphaned_answers = \
+    """SELECT post.id FROM posts post
+       WHERE post.post_type = 2
+       AND NOT EXISTS (SELECT 1 FROM posts other WHERE other.site_id = post.site_id AND other.post_id = post.parent_id);"""
+
+sql_select_orphaned_questions = \
     """SELECT post.id FROM posts post
        WHERE post.accepted_answer_id IS NOT NULL
        AND NOT EXISTS (SELECT 1 FROM posts other WHERE other.post_id = post.accepted_answer_id AND other.site_id = post.site_id);"""
 
-select_bad_answers = \
-    """SELECT COUNT(*) FROM posts post WHERE post.post_type = 2 AND post.score < 1"""
+sql_update_answer_count = \
+    """UPDATE posts question
+       SET question.answer_count = (
+           SELECT COUNT(answer.id) FROM posts answer
+           WHERE answer.site_id = question.site_id
+           AND answer.parent_id = question.post_id
+       )
+       WHERE question.post_type = 1;"""
+
+sql_count_unanswered_questions = \
+    """SELECT COUNT(id) FROM posts WHERE post_type = 1 AND answer_count < 1;"""
+
+sql_delete_unanswered_questions = \
+    """DELETE FROM posts WHERE post_type = 1 AND answer_count < 1;"""
+
+sql_count_bad_answers = \
+    """SELECT COUNT(id) FROM posts WHERE post_type = 2 AND score < 1;"""
+
+sql_delete_bad_answers = \
+    """DELETE FROM posts WHERE post_type = 2 AND score < 1;"""
 
 # Delete all posts from users with reputation < 100 which are not accepted answers
-select_bad_users = \
-    """SELECT COUNT(*) FROM posts post WHERE post.user_id IN (SELECT user.user_id FROM users user WHERE user.site_id = post.site_id AND user.reputation < 100) AND NOT EXISTS (SELECT 1 FROM posts other WHERE other.accepted_answer_id = post.post_id AND other.site_id = post.site_id);"""
+sql_select_posts_with_bad_users = \
+    """SELECT COUNT(post.id) FROM posts post
+       WHERE post.user_id IN (
+           SELECT user.user_id FROM users user
+           WHERE user.site_id = post.site_id AND user.reputation < 100
+       )
+       AND NOT EXISTS (
+           SELECT 1 FROM posts other
+           WHERE other.accepted_answer_id = post.post_id
+           AND other.site_id = post.site_id
+       );"""
 
-vacuum = \
+sql_vacuum = \
     """VACUUM"""
 
 
 def create_indices(db):
     print("Creating user index")
-    db.execute(create_user_id_index)
+    db.execute(sql_create_user_id_index)
     print("Creating post index")
-    db.execute(create_post_id_index)
+    db.execute(sql_create_post_id_index)
 
 
-def delete_orphaned_questions(db):
-    print("Finding orphaned questions (whose answer does not exist)")
-
+def clean_orphaned_questions(db):
+    print("Finding questions whose accepted answer does not exist")
     cur = db.cursor()
-    cur.execute(select_orphaned_questions)
-    post_ids = cur.fetchall()
+    cur.execute(sql_select_orphaned_questions)
+    post_ids = [row[0] for row in cur.fetchall()]
 
-    if len(post_ids) > 1000:
-        print("WARNING : found more than 10^3 orphaned questions. exit.")
-        exit(1)
+    if not click.confirm(f"Clean {len(post_ids)} orphaned questions?", default=False):
+        print("Skipping")
         return
 
-    print
-    print(post_ids)
-    print(len(post_ids))
+    cur = db.execute(f"UPDATE posts SET accepted_answer_id = NULL WHERE id IN ({select_orphaned_questions});")
+    print(f"Updated {cur.rowcount} posts")
+
+
+def delete_orphaned_answers(db):
+    print("Finding answers whose parent question does not exist")
+    cur = db.execute(sql_select_orphaned_answers)
+    post_ids = [row[0] for row in cur.fetchall()]
+
+    if not click.confirm(f"Delete {len(post_ids)} orphaned answers?", default=False):
+        print("Skipping")
+        return
+
+    cur = db.execute(f"DELETE FROM posts WHERE id IN ({select_orphaned_answers});")
+    print(f"Deleted {cur.rowcount} posts")
+
+
+def delete_unanswered_questions(db):
+    print("Finding unanswered questions")
+    cur = db.execute(sql_count_unanswered_questions)
+    count = cur.fetchone()[0]
+
+    if not click.confirm(f"Delete {count} unanswered questions?", default=False):
+        print("Skipping")
+        return
+
+    cur = db.execute(sql_delete_unanswered_questions)
+    print(f"Deleted {cur.rowcount} posts")
+
+
+def delete_bad_answers(db):
+    print("Finding bad answers")
+    cur = db.execute(sql_count_bad_answers)
+    count = cur.fetchone()[0]
+
+    if not click.confirm(f"Delete {count} bad answers?", default=False):
+        print("Skipping")
+        return
+
+    cur = db.execute(sql_delete_bad_answers)
+    print(f"Deleted {cur.rowcount} posts")
+
+
+def update_answer_count(db):
+    print("Updating answer count column")
+    cur = db.execute(sql_update_answer_count)
+    print(f"Updated {cur.rowcount} posts")
 
 
 def tidy_database(db_path, args):
@@ -57,6 +132,25 @@ def tidy_database(db_path, args):
         return
 
     create_indices(db)
-    delete_orphaned_questions(db)
 
+    if args.clean_orphaned_questions:
+        print("clean_orphaned_questions")
+        clean_orphaned_questions(db)
+
+    if args.delete_orphaned_answers:
+        print("delete_orphaned_answers")
+        delete_orphaned_answers(db)
+
+    if args.delete_bad_answers:
+        print("delete_bad_answers")
+        delete_bad_answers(db)
+
+    update_answer_count()
+
+    if args.delete_unanswered_questions:
+        print("delete_unanswered_questions")
+        delete_unanswered_questions(db)
+
+    print("================")
+    print("bye")
     db.close()
