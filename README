@@ -3,17 +3,14 @@ stackexchange-dump
 
 Scripts to deal with gathering, cleaning and loading of stackexchange data
 
-Collecting the data
+=> Dataset: https://archive.org/details/stackexchange
 
-1) `download.sh`
-2) `python extract.py stackexchange/ db.sqlite --ignore-meta`
+=> Download links: https://archive.org/download/stackexchange
 
-About the data
+=> Documentation of dataset: https://meta.stackexchange.com/questions/2677/database-schema-documentation-for-the-public-data-dump-and-sede
 
-=> License: CC-BY-SA 4.0
+=> License of dataset: CC-BY-SA 4.0
 
-=> Useful links
+=> Using the scripts
 
-- Overview: https://archive.org/details/stackexchange
-- Download links: https://archive.org/download/stackexchange
-- Data documentation: https://meta.stackexchange.com/questions/2677/database-schema-documentation-for-the-public-data-dump-and-sede
+`./download.sh && python ./extract.py stackexchange/ db.sqlite --ignore-meta`

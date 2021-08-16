@@ -7,7 +7,7 @@ from collections import OrderedDict
 import re
 import html
 
-from stackexchange.tables import sites, users, posts
+from stackexchange.schema import sites, users, posts
 
 
 def preprocess_post(row, site_id):

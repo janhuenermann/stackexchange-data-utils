@@ -5,7 +5,7 @@ from tqdm import tqdm
 import re
 import shutil
 
-from stackexchange.process import import_into_database
+from stackexchange.db import import_into_database
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('root_dir', type=str, help='path to directory containing the 7z archives')
