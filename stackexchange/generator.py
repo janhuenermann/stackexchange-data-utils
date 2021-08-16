@@ -2,6 +2,7 @@ import sqlite3
 from sqlite3 import Error
 import click
 from tqdm import tqdm
+import os
 
 
 def generate(db_path, out_dir, max_chunk_size=100_000_000):
