@@ -4,7 +4,10 @@ stackexchange-dump
 Scripts to deal with gathering, cleaning and loading of stackexchange data
 
 Using the scripts
-`./download.sh && python ./extract.py stackexchange/ db.sqlite --ignore-meta`
+./download.sh
+python ./ingest.py stackexchange/ db.sqlite --ignore-meta
+python ./tidy.py db.sqlite
+python ./export.py db.sqlite chunks/
 
 Stack Exchange dataset
 - Overview of dataset https://archive.org/details/stackexchange
