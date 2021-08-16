@@ -19,4 +19,4 @@ for option, desc in options.items():
 
 args = parser.parse_args()
 # print(args)
-tidy_database(args.db)
+tidy_database(args.db, args)

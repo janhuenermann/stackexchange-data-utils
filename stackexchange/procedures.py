@@ -145,7 +145,7 @@ def tidy_database(db_path, args):
         print("delete_bad_answers")
         delete_bad_answers(db)
 
-    update_answer_count()
+    update_answer_count(db)
 
     if args.delete_unanswered_questions:
         print("delete_unanswered_questions")
