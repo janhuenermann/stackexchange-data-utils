@@ -34,9 +34,10 @@ def generate(db_path, out_dir, max_chunk_size=100_000_000):
             fd.close()
         fd = open(chunk_path, "wb")
 
-    os.makedirs(out_dir)
+    os.makedirs(out_dir, exist_ok=True)
     next_chunk()
     endian = "big"
+    encoding = "utf-8"
 
     for item in tqdm(cur, total=total):
         question, answer = item
@@ -45,7 +46,7 @@ def generate(db_path, out_dir, max_chunk_size=100_000_000):
         # [row length], [question length], [question string], [answer string]
         fd.write(rlen.to_bytes(4, endian))
         fd.write(qlen.to_bytes(4, endian))
-        fd.write(question + answer)
+        fd.write(bytes(question + answer, encoding))
         if fd.tell() > max_chunk_size:
             next_chunk()
 
