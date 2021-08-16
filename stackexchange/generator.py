@@ -32,7 +32,7 @@ def generate(db_path, out_dir, max_chunk_size=100_000_000):
         chunk_path = os.path.join(out_dir, chunk_format.format(chunk_index))
         if fd is not None:
             fd.close()
-        fd = open(chunk_path, "w")
+        fd = open(chunk_path, "wb")
 
     os.makedirs(out_dir)
     next_chunk()
