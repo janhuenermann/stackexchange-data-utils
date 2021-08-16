@@ -9,6 +9,9 @@ sql_create_post_id_index = \
 sql_create_user_id_index = \
     """CREATE UNIQUE INDEX IF NOT EXISTS index_user_id ON users (user_id, site_id);"""
 
+sql_create_post_parent_index = \
+    """CREATE INDEX IF NOT EXISTS index_post_parent ON posts (parent_id, site_id);"""
+
 sql_select_orphaned_answers = \
     """SELECT post.id FROM posts post
        WHERE post.post_type = 2
@@ -62,6 +65,7 @@ def create_indices(db):
     db.execute(sql_create_user_id_index)
     print("Creating post index")
     db.execute(sql_create_post_id_index)
+    db.execute(sql_create_post_parent_index)
 
 
 def clean_orphaned_questions(db):
