@@ -14,7 +14,7 @@ select_orphaned_questions = \
        AND NOT EXISTS (SELECT 1 FROM posts other WHERE other.post_id = post.accepted_answer_id AND other.site_id = post.site_id);"""
 
 select_bad_answers = \
-    """SELECT COUNT(*) FROM posts post WHERE post.score < 1"""
+    """SELECT COUNT(*) FROM posts post WHERE post.post_type = 2 AND post.score < 1"""
 
 # Delete all posts from users with reputation < 100 which are not accepted answers
 select_bad_users = \
@@ -32,6 +32,8 @@ def create_indices(db):
 
 
 def delete_orphaned_questions(db):
+    print("Finding orphaned questions (whose answer does not exist)")
+
     cur = db.cursor()
     cur.execute(select_orphaned_questions)
     post_ids = cur.fetchall()
@@ -41,11 +43,12 @@ def delete_orphaned_questions(db):
         exit(1)
         return
 
+    print
     print(post_ids)
     print(len(post_ids))
 
 
-def tidy_database(db_path):
+def tidy_database(db_path, args):
     try:
         db = sqlite3.connect(db_path)
     except Error as e:
