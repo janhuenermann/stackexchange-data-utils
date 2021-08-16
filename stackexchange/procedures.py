@@ -20,7 +20,7 @@ sql_select_orphaned_questions = \
        AND NOT EXISTS (SELECT 1 FROM posts other WHERE other.post_id = post.accepted_answer_id AND other.site_id = post.site_id);"""
 
 sql_update_answer_count = \
-    """UPDATE posts question
+    """UPDATE posts AS question
        SET question.answer_count = (
            SELECT COUNT(answer.id) FROM posts answer
            WHERE answer.site_id = question.site_id
