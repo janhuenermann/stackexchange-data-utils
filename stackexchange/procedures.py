@@ -12,6 +12,9 @@ sql_create_user_id_index = \
 sql_create_post_parent_index = \
     """CREATE INDEX IF NOT EXISTS index_post_parent ON posts (parent_id, site_id);"""
 
+sql_create_post_type_index = \
+    """CREATE INDEX IF NOT EXISTS index_post_type ON posts (post_type);"""
+
 sql_select_orphaned_answers = \
     """SELECT post.id FROM posts post
        WHERE post.post_type = 2
@@ -66,7 +69,7 @@ def create_indices(db):
     print("Creating post index")
     db.execute(sql_create_post_id_index)
     db.execute(sql_create_post_parent_index)
-
+    db.execute(sql_create_post_type_index)
 
 def clean_orphaned_questions(db):
     print("Finding questions whose accepted answer does not exist")
@@ -132,7 +135,9 @@ def update_answer_count(db):
     db.commit()
 
 
-def tidy_database(db_path, args):
+def tidy_database(db_path, interactive=True):
+    assert interactive, "Non-interactive mode not supported"
+
     try:
         db = sqlite3.connect(db_path)
     except Error as e:
@@ -142,24 +147,31 @@ def tidy_database(db_path, args):
 
     create_indices(db)
 
-    if args.clean_orphaned_questions:
-        print("clean_orphaned_questions")
+    if click.confirm("clean_orphaned_questions", default=True):
+        print("Running clean_orphaned_questions")
         clean_orphaned_questions(db)
 
-    if args.delete_orphaned_answers:
-        print("delete_orphaned_answers")
+    if click.confirm("delete_orphaned_answers", default=False):
+        print("Running delete_orphaned_answers")
         delete_orphaned_answers(db)
 
-    if args.delete_bad_answers:
-        print("delete_bad_answers")
+    if click.confirm("delete_bad_answers", default=False):
+        print("Running delete_bad_answers")
         delete_bad_answers(db)
 
-    update_answer_count(db)
+    if click.confirm("update_answer_count", default=True):
+        print("Running update_answer_count")
+        update_answer_count(db)
 
-    if args.delete_unanswered_questions:
-        print("delete_unanswered_questions")
+    if click.confirm("delete_unanswered_questions", default=False):
+        print("Running delete_unanswered_questions")
         delete_unanswered_questions(db)
 
+    if click.confirm("vacuum", default=True):
+        print("Running vacuum")
+        db.execute("VACUUM;")
+        db.commit()
+
     print("================")
-    print("bye")
+    print("done")
     db.close()
