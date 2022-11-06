@@ -77,9 +77,9 @@ def clean_orphaned_questions(db):
     cur.execute(sql_select_orphaned_questions)
     post_ids = [row[0] for row in cur.fetchall()]
 
-    if not click.confirm(f"Clean {len(post_ids)} orphaned questions?", default=False):
-        print("Skipping")
-        return
+    # if not click.confirm(f"Clean {len(post_ids)} orphaned questions?", default=False):
+    #     print("Skipping")
+    #     return
 
     cur = db.execute(f"UPDATE posts SET accepted_answer_id = NULL WHERE id IN ({sql_select_orphaned_questions[:-1]});")
     print(f"Updated {cur.rowcount} posts")
@@ -91,9 +91,9 @@ def delete_orphaned_answers(db):
     cur = db.execute(sql_select_orphaned_answers)
     post_ids = [row[0] for row in cur.fetchall()]
 
-    if not click.confirm(f"Delete {len(post_ids)} orphaned answers?", default=False):
-        print("Skipping")
-        return
+    # if not click.confirm(f"Delete {len(post_ids)} orphaned answers?", default=False):
+    #     print("Skipping")
+    #     return
 
     cur = db.execute(f"DELETE FROM posts WHERE id IN ({sql_select_orphaned_answers[:-1]});")
     print(f"Deleted {cur.rowcount} posts")
@@ -105,9 +105,9 @@ def delete_unanswered_questions(db):
     cur = db.execute(sql_count_unanswered_questions)
     count = cur.fetchone()[0]
 
-    if not click.confirm(f"Delete {count} unanswered questions?", default=False):
-        print("Skipping")
-        return
+    # if not click.confirm(f"Delete {count} unanswered questions?", default=False):
+    #     print("Skipping")
+    #     return
 
     cur = db.execute(sql_delete_unanswered_questions)
     print(f"Deleted {cur.rowcount} posts")
@@ -119,9 +119,9 @@ def delete_bad_answers(db):
     cur = db.execute(sql_count_bad_answers)
     count = cur.fetchone()[0]
 
-    if not click.confirm(f"Delete {count} bad answers?", default=False):
-        print("Skipping")
-        return
+    # if not click.confirm(f"Delete {count} bad answers?", default=False):
+    #     print("Skipping")
+    #     return
 
     cur = db.execute(sql_delete_bad_answers)
     print(f"Deleted {cur.rowcount} posts")
@@ -147,30 +147,24 @@ def tidy_database(db_path, interactive=True):
 
     create_indices(db)
 
-    if click.confirm("clean_orphaned_questions", default=True):
-        print("Running clean_orphaned_questions")
-        clean_orphaned_questions(db)
+    print("Running clean_orphaned_questions")
+    clean_orphaned_questions(db)
 
-    if click.confirm("delete_orphaned_answers", default=False):
-        print("Running delete_orphaned_answers")
-        delete_orphaned_answers(db)
+    print("Running delete_orphaned_answers")
+    delete_orphaned_answers(db)
 
-    if click.confirm("delete_bad_answers", default=False):
-        print("Running delete_bad_answers")
-        delete_bad_answers(db)
+    print("Running delete_bad_answers")
+    delete_bad_answers(db)
 
-    if click.confirm("update_answer_count", default=True):
-        print("Running update_answer_count")
-        update_answer_count(db)
+    print("Running update_answer_count")
+    update_answer_count(db)
 
-    if click.confirm("delete_unanswered_questions", default=False):
-        print("Running delete_unanswered_questions")
-        delete_unanswered_questions(db)
+    print("Running delete_unanswered_questions")
+    delete_unanswered_questions(db)
 
-    if click.confirm("vacuum", default=True):
-        print("Running vacuum")
-        db.execute("VACUUM;")
-        db.commit()
+    print("Running vacuum")
+    db.execute("VACUUM;")
+    db.commit()
 
     print("================")
     print("done")

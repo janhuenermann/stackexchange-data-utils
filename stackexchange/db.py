@@ -6,7 +6,7 @@ import os
 from collections import OrderedDict
 import re
 import html
-
+from pathlib import Path
 from stackexchange.schema import sites, users, posts
 
 
@@ -26,48 +26,23 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
         print(e)
         return
 
-    # Turn on foreign key constraints
-    # db.execute("PRAGMA foreign_keys = ON;")
-
     print("Creating database schema...")
-    for table in (sites, users, posts):
+    for table in (users, posts):
         table.create_if_not_exists(db)
-
-    existing_site_count = db.execute("SELECT COUNT(*) from sites").fetchone()[0]
-
-    print("Inserting sites...")
-
-    def filter_sites(row):
-        if ignore_meta:
-            meta_in_url = "/meta." in row["url"] or ".meta." in row["url"]
-            meta_in_name = "meta" in row["name"].lower()
-            if meta_in_name or meta_in_url:
-                return None
-        return row
-
-    sites.insert_from_xml(db, os.path.join(root_dir, "Sites.xml"), filter_row=filter_sites)
-
-    site_cur = db.cursor()
-    site_cur.execute("SELECT id, url FROM sites")
-    site_todo = site_cur.fetchall()
 
     print("Inserting posts and users into database....")
 
-    sites_not_found = []
     sites_existing = []
     sites_inserted = []
 
+    site_todo = [path for path in Path(root_dir).iterdir() if path.is_dir()]
+
     with tqdm(site_todo) as pbar:
-        for site in pbar:
-            site_id = int(site[0])
-            site_url = re.match("https?://(.+)", site[1]).group(1)
+        for site_id, site_path in enumerate(site_todo):
+            site_url = site_path.name
             pbar.set_description(site_url)
 
-            site_dir = os.path.join(root_dir, site_url)
-            if not os.path.isdir(site_dir):
-                sites_not_found.append(site_url)
-                continue
-
+            site_dir = str(site_path)
             existing_count = db.execute("SELECT COUNT(*) from users where site_id=?", (site_id,)).fetchone()[0]
             if existing_count > 0:
                 sites_existing.append(site_url)
@@ -87,13 +62,6 @@ def import_into_database(root_dir, out_path, ignore_meta=False):
             posts.insert_from_xml(db, os.path.join(site_dir, "Posts.xml"), filter_row=filter_post, description="Posts")
 
             sites_inserted.append(site_url)
-
-    if len(sites_not_found) > 0:
-        print("Sites not found:")
-        print("================")
-        for site in sites_not_found:
-            print(site)
-        print("================")
 
     if len(sites_existing) > 0:
         print("Sites existing:")

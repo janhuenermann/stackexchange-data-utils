@@ -5,9 +5,9 @@ Scripts to deal with gathering, cleaning and loading of stackexchange data
 
 Using the scripts
 ./download.sh
-python ./ingest.py stackexchange/ db.sqlite --ignore-meta
+python ./ingest.py data/ db.sqlite --ignore-meta
 python ./tidy.py db.sqlite
-python ./export.py db.sqlite chunks/
+python ./export.py db.sqlite output/ --tags=bash
 
 Stack Exchange dataset
 - Overview of dataset https://archive.org/details/stackexchange
@@ -16,4 +16,3 @@ Stack Exchange dataset
 - Size of question/answer/user database 100G
 - Size of question-answer pairs as plaintext 88G (includes non-English communities)
 - License of dataset CC-BY-SA 4.0
-
