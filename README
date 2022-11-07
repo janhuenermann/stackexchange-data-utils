@@ -3,13 +3,23 @@ stackexchange-dump
 
 Scripts to deal with gathering, cleaning and loading of stackexchange data
 
-Using the scripts
+
+Using the scripts:
+
 ./download.sh
 python ./ingest.py data/ db.sqlite --ignore-meta
 python ./tidy.py db.sqlite
 python ./export.py db.sqlite output/ --tags=bash,command-line,cli,linux,zsh,macos,regex,git
 
-Stack Exchange dataset
+
+Example outputs:
+
+```
+So I am trying to add a comment for a project that I am working on with other people on Bitbucket, is it possible to just push a comment to the site? Since I am not trying to make changes to the file, but I do have comments to make. <TAGS> git <SUMMARY> can you push just a comment on git? (like you don't want to make specific changes, but you want to add a comment) <ANSWER> This takes away from what Git is designed to do, so even if there is a way of doing it it wouldn't be a good idea. Using BitBucket's issue tracker or wiki systen would be a much better idea.
+```
+
+
+Stack Exchange dataset:
 - Overview of dataset https://archive.org/details/stackexchange
 - Download links https://archive.org/download/stackexchange
 - Documentation of dataset https://meta.stackexchange.com/questions/2677/database-schema-documentation-for-the-public-data-dump-and-sede

@@ -1,13 +1,10 @@
 import sqlite3
 from sqlite3 import Error
-import xml.etree.ElementTree as ET
 from tqdm import tqdm
 import os
-from collections import OrderedDict
-import re
 import html
 from pathlib import Path
-from stackexchange.schema import sites, users, posts
+from stackexchange.schema import users, posts
 
 
 def preprocess_post(row, site_id):
