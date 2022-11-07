@@ -7,7 +7,7 @@ Using the scripts
 ./download.sh
 python ./ingest.py data/ db.sqlite --ignore-meta
 python ./tidy.py db.sqlite
-python ./export.py db.sqlite output/ --tags=bash
+python ./export.py db.sqlite output/ --tags=bash,command-line,cli,linux,zsh,macos,regex,git
 
 Stack Exchange dataset
 - Overview of dataset https://archive.org/details/stackexchange

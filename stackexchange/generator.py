@@ -25,7 +25,7 @@ def html_to_plaintext(html: str):
     return soup.get_text(separator=" ", strip=True)
 
 
-def generate(db_path, out_dir, tags=None, max_question_length=1000, max_chunk_size=100_000_000):
+def generate(db_path, out_dir, tags=None, max_question_length=1000, max_chunk_size=100_000_000, include_title_and_tags=True):
     try:
         db = sqlite3.connect(db_path)
     except Error as e:
@@ -45,7 +45,7 @@ def generate(db_path, out_dir, tags=None, max_question_length=1000, max_chunk_si
         WHERE {where_query};""").fetchone()[0]
 
     cur.execute(f"""
-        SELECT question.body, answer.body FROM posts answer
+        SELECT question.title, question.tags, question.body, answer.body FROM posts answer
         INNER JOIN posts AS question ON question.post_id = answer.parent_id AND question.site_id = answer.site_id
         WHERE {where_query};""")
 
@@ -67,10 +67,14 @@ def generate(db_path, out_dir, tags=None, max_question_length=1000, max_chunk_si
     encoding = "utf-8"
 
     for item in tqdm(cur, total=total):
-        question, answer = item
+        question_title, question_tags, question, answer = item
 
         try:
             question = html_to_plaintext(question).replace("\n", " ").strip()
+            if include_title_and_tags:
+                question_tags = question_tags.strip().replace("><", ", ").replace("<", "").replace(">", "")
+                question_title = question_title.strip()
+                question = f"{question} <TAGS> {question_tags} <SUMMARY> {question_title}"
             answer = html_to_plaintext(answer).replace("\n", " ").strip()
         except KeyboardInterrupt:
             break
@@ -78,7 +82,7 @@ def generate(db_path, out_dir, tags=None, max_question_length=1000, max_chunk_si
             print(f"Skipped question answer pair due to error: {e}")
             continue
 
-        line = question + " ANSWER: " + answer + "\n"
+        line = question + " <ANSWER> " + answer + "\n"
         fd.write(line.encode(encoding, errors="ignore"))
         if fd.tell() > max_chunk_size:
             next_chunk()
