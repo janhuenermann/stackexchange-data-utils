@@ -1,6 +1,5 @@
 import sqlite3
 from sqlite3 import Error
-import click
 
 
 sql_create_post_id_index = \
@@ -73,14 +72,6 @@ def create_indices(db):
 
 def clean_orphaned_questions(db):
     print("Finding questions whose accepted answer does not exist")
-    cur = db.cursor()
-    cur.execute(sql_select_orphaned_questions)
-    post_ids = [row[0] for row in cur.fetchall()]
-
-    # if not click.confirm(f"Clean {len(post_ids)} orphaned questions?", default=False):
-    #     print("Skipping")
-    #     return
-
     cur = db.execute(f"UPDATE posts SET accepted_answer_id = NULL WHERE id IN ({sql_select_orphaned_questions[:-1]});")
     print(f"Updated {cur.rowcount} posts")
     db.commit()
@@ -88,13 +79,6 @@ def clean_orphaned_questions(db):
 
 def delete_orphaned_answers(db):
     print("Finding answers whose parent question does not exist")
-    cur = db.execute(sql_select_orphaned_answers)
-    post_ids = [row[0] for row in cur.fetchall()]
-
-    # if not click.confirm(f"Delete {len(post_ids)} orphaned answers?", default=False):
-    #     print("Skipping")
-    #     return
-
     cur = db.execute(f"DELETE FROM posts WHERE id IN ({sql_select_orphaned_answers[:-1]});")
     print(f"Deleted {cur.rowcount} posts")
     db.commit()
@@ -102,13 +86,6 @@ def delete_orphaned_answers(db):
 
 def delete_unanswered_questions(db):
     print("Finding unanswered questions")
-    cur = db.execute(sql_count_unanswered_questions)
-    count = cur.fetchone()[0]
-
-    # if not click.confirm(f"Delete {count} unanswered questions?", default=False):
-    #     print("Skipping")
-    #     return
-
     cur = db.execute(sql_delete_unanswered_questions)
     print(f"Deleted {cur.rowcount} posts")
     db.commit()
@@ -116,13 +93,6 @@ def delete_unanswered_questions(db):
 
 def delete_bad_answers(db):
     print("Finding bad answers")
-    cur = db.execute(sql_count_bad_answers)
-    count = cur.fetchone()[0]
-
-    # if not click.confirm(f"Delete {count} bad answers?", default=False):
-    #     print("Skipping")
-    #     return
-
     cur = db.execute(sql_delete_bad_answers)
     print(f"Deleted {cur.rowcount} posts")
     db.commit()

@@ -1,6 +1,5 @@
 import sqlite3
 from sqlite3 import Error
-import click
 from tqdm import tqdm
 import os
 from bs4 import BeautifulSoup
