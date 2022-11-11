@@ -69,8 +69,10 @@ def generate(
     ]
 
     if tags is not None:
+        tag_queries = []
         for tag in tags:
-            where_queries.append(f"question.tags like '%<{tag}>%'")
+            tag_queries.append(f"question.tags like '%<{tag}>%'")
+        where_queries.append("(" + " OR ".join(tag_queries) + ")")
 
     where_query = " AND ".join(where_queries)
     print(where_query)
@@ -80,7 +82,7 @@ def generate(
         WHERE {where_query};""").fetchone()[0]
 
     cur.execute(f"""
-        SELECT question.title, question.tags, question.body, answer.body FROM posts answer
+        SELECT question.title, question.tags, question.body, answer.body, answer.score FROM posts answer
         INNER JOIN posts AS question ON answer.parent_id = question.post_id AND question.site_id = answer.site_id
         WHERE {where_query} ORDER BY RANDOM();""")
 
@@ -115,7 +117,7 @@ def generate(
 
 
 def process_line(item):
-    question_title, question_tags, question, answer = item
+    question_title, question_tags, question, answer, score = item
     try:
         question_body = html_to_plaintext(question).replace("\n", " ").strip()
         answer_body = html_to_plaintext(answer).replace("\n", " ").strip()
@@ -123,9 +125,9 @@ def process_line(item):
         question_title = question_title.strip()
         if len(question_body) > 512:
             # If the question is too long, we don't want to include it
-            line = f"<TITLE> {question_title} <TAGS> {question_tags} <ANSWER> {answer_body}\n"
+            line = f"<TITLE> {question_title} <TAGS> {question_tags} <SCORE> {score} <ANSWER> {answer_body}\n"
         else:
-            line = f"<TITLE> {question_title} <BODY> {question_body} <TAGS> {question_tags} <ANSWER> {answer_body}\n"
+            line = f"<TITLE> {question_title} <BODY> {question_body} <TAGS> {question_tags} <SCORE> {score} <ANSWER> {answer_body}\n"
     except KeyboardInterrupt:
         return None
     except Exception as e:
